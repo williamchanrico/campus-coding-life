@@ -1,0 +1,2 @@
+IoT;Sandy;Internet of Things (IoT) adalah sebuah konsep yang bertujuan untuk memperluas manfaat dari konektivitas internet yang tersambung secara terus-menerus, berikut kemampuan remote control, berbagi data, dan sebagainya, termasuk pada benda-benda di dunia fisik.;
+Connect the dots;Steve Jobs;You can't connect the dots looking forward, you can only connect them looking backwards. So you have to trust that the dots will somehow connect in your future.;

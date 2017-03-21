@@ -1,0 +1,8 @@
+Andi 88 5
+Joko 49 2
+Tono 56 3
+Ani 15 7
+Banghe 1 2
+asdfa 14 1
+qqq 15 2
+test 30 3
