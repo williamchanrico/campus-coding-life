@@ -10,8 +10,8 @@
 
 struct cake{
 	int no;
-	int	available;
-	int	price;
+	int available;
+	int price;
 	char code[20];
 	char name[20];
 };
