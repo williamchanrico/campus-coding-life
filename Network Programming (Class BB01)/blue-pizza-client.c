@@ -31,6 +31,78 @@ typedef struct {
 	int totalTopping;
 } Data;
 
+void clear();
+void err_exit(char *fmt, ...);
+void printWelcomeMessage();
+void inputData(Data *data);
+void printOrder(Data *data);
+
+int main(int argc, char **argv){
+	int status, sockfd;
+	struct addrinfo hints, *res, *p;
+
+	if(argc != 3)
+		err_exit("usage: %s <port> <hostname/IP>\n", argv[0]);
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+
+	if( (status = getaddrinfo(argv[2], argv[1], &hints, &res)) != 0)
+		err_exit("getaddrinfo error: %s\n", gai_strerror(status));
+
+	for(p = res; p != NULL; p = p->ai_next){
+		if( (sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) < 0)
+			continue;
+
+		if(connect(sockfd, p->ai_addr, p->ai_addrlen) == 0)
+			break;
+
+		if(close(sockfd) < 0)
+			err_exit("close error: %s\n", strerror(errno));
+	}
+
+	if(p == NULL)
+		err_exit("socket/connect error: %s\n", strerror(errno));
+
+	while(TRUE){
+		Data data;
+
+		clear();
+
+		printWelcomeMessage();
+
+		printf("\n");
+
+		inputData(&data);
+
+		if(write(sockfd, &data, sizeof(data)) < 0)
+			err_exit("write error: %s\n", strerror(errno));
+
+		if(!strcasecmp(data.name, "exit")){
+			printf("\n Thanks for ordering in Blue Custom Pizza Delivery!!\n\n");
+
+			break;
+		}
+
+		if(read(sockfd, (Data *) &data, sizeof(data)) < 0)
+			err_exit("read error: %s\n", strerror(errno));
+
+		printf("\n");
+
+		printOrder(&data);
+
+		getchar();
+	}
+
+	if(close(sockfd) < 0)
+		err_exit("close error: %s\n", strerror(errno));
+
+	freeaddrinfo(res);
+
+	exit(EXIT_SUCCESS);
+}
+
 void err_exit(char *fmt, ...){
 	va_list ap;
 	char buff[MAXLINE];
@@ -111,70 +183,4 @@ void clear(){
 
 	for(a = 0; a < 25; a++)
 		printf("\n");
-}
-
-int main(int argc, char **argv){
-	int status, sockfd;
-	struct addrinfo hints, *res, *p;
-
-	if(argc != 3)
-		err_exit("usage: %s <port> <hostname/IP>\n", argv[0]);
-
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-
-	if( (status = getaddrinfo(argv[2], argv[1], &hints, &res)) != 0)
-		err_exit("getaddrinfo error: %s\n", gai_strerror(status));
-
-	for(p = res; p != NULL; p = p->ai_next){
-		if( (sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) < 0)
-			continue;
-
-		if(connect(sockfd, p->ai_addr, p->ai_addrlen) == 0)
-			break;
-
-		if(close(sockfd) < 0)
-			err_exit("close error: %s\n", strerror(errno));
-	}
-
-	if(p == NULL)
-		err_exit("socket/connect error: %s\n", strerror(errno));
-
-	while(TRUE){
-		Data data;
-
-		clear();
-
-		printWelcomeMessage();
-
-		printf("\n");
-
-		inputData(&data);
-
-		if(write(sockfd, &data, sizeof(data)) < 0)
-			err_exit("write error: %s\n", strerror(errno));
-
-		if(!strcasecmp(data.name, "exit")){
-			printf("\n Thanks for ordering in Blue Custom Pizza Delivery!!\n\n");
-
-			break;
-		}
-
-		if(read(sockfd, (Data *) &data, sizeof(data)) < 0)
-			err_exit("read error: %s\n", strerror(errno));
-
-		printf("\n");
-
-		printOrder(&data);
-
-		getchar();
-	}
-
-	if(close(sockfd) < 0)
-		err_exit("close error: %s\n", strerror(errno));
-
-	freeaddrinfo(res);
-
-	exit(EXIT_SUCCESS);
 }

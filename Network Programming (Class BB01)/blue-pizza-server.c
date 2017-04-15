@@ -32,6 +32,102 @@ typedef struct {
 	int totalTopping;
 } Data;
 
+void clear();
+void err_exit(char *fmt, ...);
+void calculatePrice(Data *data);
+void generateOrderCode(Data *data);
+void printWelcomeMessage();
+void printBill(Data *data);
+int toppingPrice(char *topping);
+
+int main(int argc, char **argv){
+	const int on = 1;
+	int status, listenfd, connfd;
+	struct addrinfo hints, *res, *p;
+	// struct sockaddr_storage cliaddr;
+	// socklen_t cliaddrlen = sizeof(cliaddr);
+
+	if(argc != 2)
+		err_exit("usage: %s <port>\n", argv[0]);
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_flags = AI_PASSIVE;
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+
+	if( (status = getaddrinfo(NULL, argv[1], &hints, &res)) != 0)
+		err_exit("getaddrinfo error: %s\n", gai_strerror(status));
+
+	for(p = res; p != NULL; p = p->ai_next){
+		if( (listenfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) < 0)
+			continue;
+
+		if(setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
+			err_exit("setsockopt error: %s\n", strerror(errno));
+
+		if(bind(listenfd, p->ai_addr, p->ai_addrlen) == 0)
+			break;
+
+		if(close(listenfd) < 0)
+			err_exit("close error: %s\n", strerror(errno));
+	}
+
+	if(p == NULL)
+		err_exit("socket/bind error: %s\n", strerror(errno));
+
+	if(listen(listenfd, LISTENQ) < 0)
+		err_exit("listen error: %s\n", strerror(errno));
+
+	clear();
+
+	printWelcomeMessage();
+
+	printf("\n Server active !\n");
+	printf(" Waiting for client...\n");
+
+	// if( (connfd = accept(listenfd, (SA *) &cliaddr, &cliaddrlen)) < 0)
+	// 	err_exit("accept error: %s\n", strerror(errno));
+
+	if( (connfd = accept(listenfd, NULL, NULL)) < 0)
+		err_exit("accept error: %s\n", strerror(errno));
+
+	printf(" Client connected sockfd %d\n", connfd);
+	
+	while(TRUE){
+		Data data;
+
+		if(read(connfd, (Data *) &data, sizeof(data)) < 0)
+			err_exit("read error: %s\n", strerror(errno));
+
+		if(!strcasecmp(data.name, "exit"))
+			break;
+
+		generateOrderCode(&data);
+
+		calculatePrice(&data);
+
+		printBill(&data);
+
+		printf("\n\n");
+
+		if(write(connfd, &data, sizeof(data)) < 0)
+			err_exit("write error: %s\n", strerror(errno));
+	}
+
+	if(close(listenfd) < 0)
+		err_exit("close error: %s\n", strerror(errno));
+
+	if(close(connfd) < 0)
+		err_exit("close error: %s\n", strerror(errno));
+
+	freeaddrinfo(res);
+
+	printf(" Client disconnected\n");
+	printf("\n Thanks for ordering in Blue Custom Pizza Delivery!!\n\n");
+
+	exit(EXIT_SUCCESS);
+}
+
 int toppingPrice(char *topping){
 	if(!strcasecmp(topping, "cheese"))
 		return 5000;
@@ -103,91 +199,4 @@ void clear(){
 
 	for(a = 0; a < 25; a++)
 		printf("\n");
-}
-
-int main(int argc, char **argv){
-	const int on = 1;
-	int status, listenfd, connfd;
-	struct addrinfo hints, *res, *p;
-	// struct sockaddr_storage cliaddr;
-	// socklen_t cliaddrlen = sizeof(cliaddr);
-
-	if(argc != 2)
-		err_exit("usage: %s <port>\n", argv[0]);
-
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_flags = AI_PASSIVE;
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-
-	if( (status = getaddrinfo(NULL, argv[1], &hints, &res)) != 0)
-		err_exit("getaddrinfo error: %s\n", gai_strerror(status));
-
-	for(p = res; p != NULL; p = p->ai_next){
-		if( (listenfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) < 0)
-			continue;
-
-		if(setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
-			err_exit("setsockopt error: %s\n", strerror(errno));
-
-		if(bind(listenfd, p->ai_addr, p->ai_addrlen) == 0)
-			break;
-
-		if(close(listenfd) < 0)
-			err_exit("close error: %s\n", strerror(errno));
-	}
-
-	if(p == NULL)
-		err_exit("socket/bind error: %s\n", strerror(errno));
-
-	if(listen(listenfd, LISTENQ) < 0)
-		err_exit("listen error: %s\n", strerror(errno));
-
-	clear();
-
-	printWelcomeMessage();
-	
-
-	printf("\n Server active !\n");
-	printf(" Waiting for client...\n");
-
-	// if( (connfd = accept(listenfd, (SA *) &cliaddr, &cliaddrlen)) < 0)
-	// 	err_exit("accept error: %s\n", strerror(errno));
-
-	if( (connfd = accept(listenfd, NULL, NULL)) < 0)
-		err_exit("accept error: %s\n", strerror(errno));
-
-	printf(" Client connected sockfd %d\n", connfd);
-	
-	while(TRUE){
-		Data data;
-
-		if(read(connfd, (Data *) &data, sizeof(data)) < 0)
-			err_exit("read error: %s\n", strerror(errno));
-
-		if(!strcasecmp(data.name, "exit"))
-			break;
-
-		generateOrderCode(&data);
-
-		calculatePrice(&data);
-
-		printBill(&data);
-
-		printf("\n\n");
-
-		if(write(connfd, &data, sizeof(data)) < 0)
-			err_exit("write error: %s\n", strerror(errno));
-	}
-
-	if(close(listenfd) < 0)
-		err_exit("close error: %s\n", strerror(errno));
-
-	if(close(connfd) < 0)
-		err_exit("close error: %s\n", strerror(errno));
-
-	printf(" Client disconnected\n");
-	printf("\n Thanks for ordering in Blue Custom Pizza Delivery!!\n\n");
-
-	exit(EXIT_SUCCESS);
 }
