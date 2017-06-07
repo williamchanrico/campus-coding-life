@@ -7,7 +7,7 @@ import java.util.logging.Logger;
 /**
  * Title: blue-cinema-creator-client
  * Description: Blue Cinema Creator client class
- * Author William Chanrico
+ * Author: William Chanrico
  * Date: 6-June-2017
  */
 public class BlueCinemaClient {

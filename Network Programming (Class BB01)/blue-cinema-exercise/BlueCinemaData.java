@@ -3,7 +3,7 @@ import java.io.Serializable;
 /**
  * Title: blue-cinema-creator-data
  * Description: Blue Cinema Creator data class
- * Author William Chanrico
+ * Author: William Chanrico
  * Date: 6-June-2017
  */
 public class BlueCinemaData implements Serializable {

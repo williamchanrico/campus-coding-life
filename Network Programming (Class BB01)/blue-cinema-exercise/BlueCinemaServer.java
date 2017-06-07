@@ -7,7 +7,7 @@ import java.util.logging.Logger;
 /**
  * Title: blue-cinema-creator-server
  * Description: Blue Cinema Creator server class
- * Author William Chanrico
+ * Author: William Chanrico
  * Date: 6-June-2017
  */
 public class BlueCinemaServer {
