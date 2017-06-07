@@ -20,11 +20,11 @@ import java.util.logging.Logger;
  */
 public class BlueCinemaUtil {
 
-  public static Scanner scanner = new Scanner(System.in);
-
   private static BlueCinemaUtil instance = null;
   private static int BUFFER_SIZE = 8192;
   private static int dataCount = 0;
+
+  public static Scanner scanner = new Scanner(System.in);
 
   private BlueCinemaUtil() {}
 
